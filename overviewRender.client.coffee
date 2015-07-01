@@ -63,8 +63,6 @@ exports.render = ->
 	statusColorDark = ['#999', '#005CA0', Plugin.colors().highlight, '#ddd']
 
 	Dom.section !->
-		Dom.style
-			box: 'middle'
 		if not Db.shared.get 'queries'
 			Dom.h4 "No participations yet."
 		else
@@ -76,12 +74,10 @@ exports.render = ->
 					Dom.div !->
 						status = query.get('status') #0 = open, 1 = closed, 2 = hidden
 						Dom.style
-							box: 'middle'
-							position: 'relative'
-							display: 'flex'
+							Box: 'bottom'
 						Dom.div !->
 							Dom.style
-								width: '100%'
+								Flex: 1
 								padding: '20px 8px'
 								# minHeight: '50px'
 							
@@ -93,15 +89,11 @@ exports.render = ->
 						if Plugin.userIsAdmin()
 							Dom.div !->
 								Dom.style
-									display: 'flex'
-									flexDirection: 'column'
-									justifyContent: 'flex-end'
-									alignItems: 'flex-end'
+									Box: 'vertical right'
 									margin: "10px 5px"
 								Dom.div !->
 									Dom.style
-										display: 'flex';
-										alignItems: 'center'
+										Box: 'middle'
 									require('icon').render(data: '
 									question', color: '#666')
 									Dom.last().style 'margin-right': '5px'
@@ -119,10 +111,8 @@ exports.render = ->
 							#render the chat icon anyway
 							Dom.div !->
 								Dom.style
-									display: 'flex';
-									alignItems: 'center'
+									Box: 'middle'
 									margin: "10px"
-									width: "50px"
 								if status is 2 then Dom.style color: '#aaa'
 								require('icon').render(data: '
 										question', color: if status is 2 then '#aaa' else '#666')
@@ -138,9 +128,6 @@ exports.render = ->
 									Dom.text "Closed"
 				#seperator
 					Dom.div !->
-						Dom.style
-							# marginTop: '20px'
-							# marginBottom: '12px'
 						Form.sep()
 			if nrP is 0
 				#No participations are added or visible.

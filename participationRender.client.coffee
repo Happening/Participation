@@ -31,7 +31,7 @@ exports.render = (queryId) ->
 			Dom.h1 query.get('title')
 			Dom.text query.get('text')
 			if query.get('status') is 2
-				Dom.h4 "This participation is closed. You can view the results"
+				Dom.h4 "This participation is closed. You can view the results."
 
 		query.iterate 'replies', (reply) !->
 			up = Db.personal.ref('up')
@@ -39,9 +39,7 @@ exports.render = (queryId) ->
 			Dom.div !->
 				Dom.style
 					minHeight: '50px' #minimum height of the upvote thingy
-					display: 'flex'
-					alignItems: 'center';
-					justifyContent: 'center';
+					Box: 'left middle'
 					margin: '15px 0px'
 				Dom.div !->
 					already = up.get queryId, reply.key()
@@ -50,10 +48,8 @@ exports.render = (queryId) ->
 						color: color
 						width: '50px'
 						padding: '5px'
-						textAlign: 'center'
-						flexShrink: 0
-					if query.get('status') isnt 2
-						
+						Box: 'vertical center'
+					if query.get('status') isnt 2						
 						Dom.div !->
 							Dom.style
 								fontSize: '24px'
@@ -75,14 +71,13 @@ exports.render = (queryId) ->
 
 				Form.vSep()
 				Dom.last().style
-					"flex-shrink": 0
 					"align-self": "stretch"
 					"margin": "15px 0px"
 					"min-height": "30px"
 
 				Dom.div !->
 					Dom.style
-						width: '100%' #this isn't really true, but it needs to fill all remaining with regardless
+						Flex: 1
 						padding: '5px 10px'
 					Dom.text reply.get('text')
 			Form.sep()
@@ -92,12 +87,8 @@ exports.render = (queryId) ->
 		if query.get('status') isnt 2
 			Dom.div !->
 				Dom.style
-					Flex: 1
-					# padding: '8px'			
-					# paddingLeft: '18px'
 					marginTop: '5px'
 					padding: '15px 8px 10px 18px'
-					clear: 'both'
 					color: Plugin.colors().highlight	
 
 				Dom.text tr '+ Add reply'

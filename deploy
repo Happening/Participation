@@ -16,7 +16,8 @@ fi
 
 tmp=.upload.zip
 rm -f $tmp
-zip -qr $tmp * -x@.deployignore
+# zip -qr $tmp * -x@.deployignore
+zip -qr $tmp *
 
 # see if we can use curl, otherwise try wget, else fail
 if hash curl 2> /dev/null; then

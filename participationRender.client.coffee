@@ -24,6 +24,16 @@ exports.render = (queryId) ->
 
 	Page.setTitle query.get 'title'
 
+	if Plugin.userIsAdmin()
+		Page.setActions
+			icon: 'trash'
+			label: 'remove photo'
+			action: !->
+				Modal.confirm null, "Remove participation?", !->
+					Server.sync 'delete', queryId, !->
+						Db.shared.remove 'queries', queryId
+					Page.back()
+
 	Dom.section !->
 		Dom.div !->
 			Dom.style

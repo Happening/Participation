@@ -13,13 +13,13 @@ exports.client_init = !->
 
 exports.client_new = (d) !->	
 	id = Db.shared.incr 'queryId'
-	log "New query added (" + id + ")"
+	log "New query added (" + id + ") " + JSON.stringify(d)
 	Db.shared.set 'queries', id,
 		title: d.title
 		text: d.text
 		repliesId: 0
 		replies: null
-		status: 3
+		status: parseInt d.status ? 1
 		user: Plugin.userId() #waarom werkt Plugin serverside ook? magic!
 
 exports.client_reply = (parent, reply, user) !->

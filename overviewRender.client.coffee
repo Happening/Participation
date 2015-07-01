@@ -8,6 +8,7 @@ Form = require 'form'
 Page = require 'page'
 Server = require 'server'
 Modal = require 'modal'
+Obs = require 'obs'
 
 renderMenu = (query) !->
 	Modal.show "Change status to:", !->
@@ -60,7 +61,6 @@ renderMenu = (query) !->
 exports.render = ->
 	statusText = ['Open', 'Open', 'Closed', 'Hidden']
 	statusColor = ['#aaa', Plugin.colors().bar, Plugin.colors().highlight, '#ddd']
-	statusColorDark = ['#999', '#005CA0', Plugin.colors().highlight, '#ddd']
 
 	Dom.section !->
 		if not Db.shared.get 'queries'
@@ -79,7 +79,7 @@ exports.render = ->
 							Dom.style
 								Flex: 1
 								padding: '20px 8px'
-								# minHeight: '50px'
+								position: 'relative'
 							
 							if status is 2 then Dom.style color: '#aaa'
 							Dom.h3 query.get('title')
@@ -90,48 +90,72 @@ exports.render = ->
 							Dom.div !->
 								Dom.style
 									Box: 'vertical right'
-									margin: "10px 5px"
+									marginTop: '20px'
 								Dom.div !->
 									Dom.style
+										Flex: 1
 										Box: 'middle'
+										marginRight: '10px'
 									require('icon').render(data: '
 									question', color: '#666')
 									Dom.last().style 'margin-right': '5px'
 									Dom.text query.get('repliesId')
 								Dom.div !->
-									Dom.cls "button"
 									Dom.style
-										width: '55px'
-										textAlign: 'center'
-										backgroundColor: statusColor[status]
-									Dom.text tr statusText[status]
+										Box: 'right middle'
+										padding: '10px'
+
+									Dom.div !->
+										Dom.style
+											Box: 'vertical'
+											textAlign: 'right'
+											fontWeight: 'bold'
+											fontSize: '14px'
+											textTransform: 'uppercase'
+											color: "#bbb"
+
+										mode = query.get('status')-1
+										for x,n in [tr("Open"), tr("Closed"), tr("Hidden")]
+											Dom.span !->
+												Dom.text x
+												if mode==n 
+													Dom.style color: Plugin.colors().highlight
+
 									Dom.onTap !->
-										renderMenu( query )
+										# modeO.set((modeO.peek()+1)%3)
+										newStatus = ((query.peek('status'))%3)+1
+										Server.sync 'status', query.key(), newStatus, !->
+											#this function toggles the already temporarily. The server side does this for real.
+											query.modify 'status', -> newStatus
 						else
-							#render the chat icon anyway
 							Dom.div !->
 								Dom.style
-									Box: 'middle'
-									margin: "10px"
-								if status is 2 then Dom.style color: '#aaa'
-								require('icon').render(data: '
-										question', color: if status is 2 then '#aaa' else '#666')
-								Dom.last().style 'margin-right': '5px'
-								Dom.text query.get('repliesId')
-							if status is 2
-								Dom.p !->
+									Box: 'vertical right bottom'
+									marginTop: '20px'
+								if status is 2
+									Dom.span !->
+										Dom.style
+											# position: 'absolute'
+											# bottom: '-10px'
+											color: '#aaa'
+										Dom.text "Closed"
+								#render the chat icon anyway
+								Dom.div !->
 									Dom.style
-										position: 'absolute'
-										bottom: '-10px'
-										right: '10px'
-										color: '#aaa'
-									Dom.text "Closed"
+										Box: 'middle'
+										margin: "10px"
+									if status is 2 then Dom.style color: '#aaa'
+									require('icon').render(data: '
+											question', color: if status is 2 then '#aaa' else '#666')
+									Dom.last().style 'margin-right': '5px'
+									Dom.text query.get('repliesId')
 				#seperator
 					Dom.div !->
 						Form.sep()
 			if nrP is 0
 				#No participations are added or visible.
 				Dom.h4 "No participations yet..."
+
 	#add 'add query'
 		if Plugin.userIsAdmin()
 			Dom.div !->
@@ -154,23 +178,37 @@ exports.render = ->
 						Form.input
 							name: 'text'
 							text: 'Optional description'
-						# for i in [1..3]
-						# 	Dom.div !->
-						# 		Dom.cls "button"
-						# 		Dom.cls "hoi"
-						# 		Dom.get().prop("id", "button")
-						# 		Dom.get().prop("name", "buttonName")
-						# 		Dom.style
-						# 			width: '55px'
-						# 			textAlign: 'center'
-						# 			backgroundColor: statusColor[i]
-						# 		radio[i-1] = Dom.get()
-						# 		log JSON.stringify radio
-						# 		Dom.text tr statusText[i]
-						# 		Dom.onTap !->
-						# 			log JSON.stringify Dom.get()
-									
-						# 			selection.style 'background-color': statusColorDark[i]
+
+						Form.hidden "status", 1
+						statusO = Dom.last()
+						Dom.div !->
+							Dom.style
+								Box: 'left middle'
+								padding: '10px'
+
+							Dom.span "Initial status:"
+
+							modeO = Obs.create 0
+							Dom.div !->
+								Dom.style
+									Flex: 1
+									Box: 'vertical'
+									textAlign: 'right'
+									fontWeight: 'bold'
+									fontSize: '14px'
+									textTransform: 'uppercase'
+									color: "#bbb"
+								
+								mode = modeO.get()
+								statusO.value( mode + 1 )
+								for val,n in [tr("Open"), tr("Closed"), tr("Hidden")]
+									Dom.span !->
+										Dom.text val
+										if mode == n 
+											Dom.style color: Plugin.colors().highlight
+								Dom.onTap !->
+									modeO.set ((mode+1)%3)
+
 						Form.setPageSubmit (d) !->
 							if d.title
 								Server.call 'new', d

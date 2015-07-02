@@ -21,6 +21,9 @@ exports.client_new = (d) !->
 		replies: null
 		status: parseInt d.status ? 1
 		user: Plugin.userId() #waarom werkt Plugin serverside ook? magic!
+		time: 0|(new Date()/1000)
+		updateTime: 0
+
 
 exports.client_reply = (parent, reply, user) !->
 	query = Db.shared.ref 'queries', parent
@@ -29,8 +32,10 @@ exports.client_reply = (parent, reply, user) !->
 	replies.set commentId,
 		text: reply,
 		user: user,
-		votes: 0
+		votes: 0,
+		time: 0|(new Date()/1000)
 	exports.client_up parent, commentId
+	query.set 'updateTime', 0|(new Date()/1000) # Update the timestamp
 
 exports.client_seed = (queryId, seed) !->
 	s = Db.personal().createRef 'seeds'

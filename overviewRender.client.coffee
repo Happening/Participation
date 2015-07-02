@@ -9,58 +9,10 @@ Page = require 'page'
 Server = require 'server'
 Modal = require 'modal'
 Obs = require 'obs'
-
-renderMenu = (query) !->
-	Modal.show "Change status to:", !->
-		Dom.style width: '80%'
-		Dom.div !->
-			Dom.style
-				maxHeight: '40%'
-				overflow: 'auto'
-				_overflowScrolling: 'touch'
-				backgroundColor: '#eee'
-				margin: '-12px'
-
-			# Plugin.users.iterate (user) !->
-			Ui.list !->
-				Ui.item !->
-					Dom.text tr 'Open'
-					Dom.onTap !->
-						Server.sync 'status', query.key(), 1, !->
-							#this function toggles the already temporarily. The server side does this for real.
-							query.modify 'status', -> 1
-						Modal.remove()
-				Ui.item !->
-					# Dom.text if !closed then tr 'Close' else tr 'Open'
-					Dom.text tr 'Close'
-					Dom.onTap !->
-						Server.sync 'status', query.key(), 2, !->
-							#this function toggles the already temporarily. The server side does this for real.
-							query.modify 'status', -> 2
-						Modal.remove()
-				Ui.item !->
-					# Dom.text if !closed then tr 'Close' else tr 'Open'
-					Dom.text tr 'Hide'
-					Dom.onTap !->
-						Server.sync 'status', query.key(), 3, !->
-							#this function toggles the already temporarily. The server side does this for real.
-							query.modify 'status', -> 3
-						Modal.remove()												
-				Ui.item !->
-					Dom.style
-						color: Plugin.colors().highlight
-					Dom.text tr 'Delete'
-					Dom.onTap !->
-						Modal.remove()
-						Modal.confirm "Delete participation", "Are you sure you want to remove the participation?", !->
-							Server.sync 'delete', query.key(), !->
-								Db.shared.remove 'queries', query.key()	
-	, null
-	, ['cancel', tr("Cancel")]	
+Event = require 'event'
 
 exports.render = ->
-	statusText = ['Open', 'Open', 'Closed', 'Hidden']
-	statusColor = ['#aaa', Plugin.colors().bar, Plugin.colors().highlight, '#ddd']
+	chatIcon3 = [5,0,-3,"butt",-4,"miter",-5,4,4,2,0.03097373416806601,0.03097373416806601,2,2,0,0.0722720685046361,2,2,0,0,4,2,1.0666666577869877,1.0666666577869877,2,2,-470.71484,-465.13086,7,0,10,2,476.91797,465.13086,16,6,473.48159,465.13086,470.71484,467.89566,470.71484,471.33203,11,2,470.71484,479.99805,16,6,470.71484,483.43442,473.48159,486.20117,476.91797,486.20117,11,2,488.32031,486.20117,11,2,497.57227,491.02344,11,2,497.74414,485.45312,16,6,499.67593,484.40454,500.98242,482.35899,500.98242,479.99805,11,2,500.98242,471.33203,16,6,500.98242,467.89566,498.21567,465.13086,494.7793,465.13086,11,2,476.91797,465.13086,12,0,8,0,6,0]
 
 	Dom.section !->
 		if not Db.shared.get 'queries'
@@ -69,86 +21,116 @@ exports.render = ->
 			nrP = 0
 			Db.shared.iterate 'queries', (query) !->
 				#if hidden, skip (unless we're admin)
-				if query.get('status') isnt 3 or Plugin.userIsAdmin()
+				if query.get('status') isnt 3 or Plugin.userIsAdmin()				
 					++nrP
 					Dom.div !->
-						status = query.get('status') #0 = open, 1 = closed, 2 = hidden
 						Dom.style
+							Flex: 1
+							display: 'flex' # dunno why this isn't het with 'Flex: 1'
 							Box: 'bottom'
 						Dom.div !->
+							status = query.get('status') #0 = open, 1 = closed, 2 = hidden
+
 							Dom.style
 								Flex: 1
-								padding: '20px 8px'
-								position: 'relative'
+								# position: 'relative'
+								Box: 'bottom'
+								paddingRight: '8px'
 							
-							if status is 2 then Dom.style color: '#aaa'
-							Dom.h3 query.get('title')
-							if status is 2 then Dom.last().style 'color': '#aaa'
-							Dom.text query.get('text')
-							Dom.onTap !-> Page.nav query.key() # argument adds /key() to the url
-						if Plugin.userIsAdmin()
+							#The title and subtitle
 							Dom.div !->
+								c = '#888'
+								if status isnt 1 then c = '#aaa'
+								if Event.isNew(query.get('time')) then c = '#5b0'
 								Dom.style
-									Box: 'vertical right'
-									marginTop: '20px'
-								Dom.div !->
+									padding: '20px 8px 10px 8px'
+									Flex: 1
+									color: c
+
+								Dom.h3 !->
 									Dom.style
-										Flex: 1
-										Box: 'middle'
-										marginRight: '10px'
-									require('icon').render(data: '
-									question', color: '#666')
-									Dom.last().style 'margin-right': '5px'
-									Dom.text query.get('repliesId')
-								Dom.div !->
-									Dom.style
-										Box: 'right middle'
-										padding: '10px'
+										marginTop: '0px'
+										color: c
+									Dom.text query.get('title')
 
-									Dom.div !->
-										Dom.style
-											Box: 'vertical'
-											textAlign: 'right'
-											fontWeight: 'bold'
-											fontSize: '14px'
-											textTransform: 'uppercase'
-											color: "#bbb"
+								# if status isnt 1 then Dom.last().style 'color': c
+								Dom.text query.get('text')
 
-										mode = query.get('status')-1
-										for x,n in [tr("Open"), tr("Closed"), tr("Hidden")]
-											Dom.span !->
-												Dom.text x
-												if mode==n 
-													Dom.style color: Plugin.colors().highlight
-
-									Dom.onTap !->
-										# modeO.set((modeO.peek()+1)%3)
-										newStatus = ((query.peek('status'))%3)+1
-										Server.sync 'status', query.key(), newStatus, !->
-											#this function toggles the already temporarily. The server side does this for real.
-											query.modify 'status', -> newStatus
-						else
 							Dom.div !->
 								Dom.style
 									Box: 'vertical right bottom'
-									marginTop: '20px'
-								if status is 2
+									margin: '10px 0px'
+									# Flex: 1
+
+								# if not admin, print 'closed' if the Participation is.
+								if not Plugin.userIsAdmin() and status is 2
 									Dom.span !->
 										Dom.style
-											# position: 'absolute'
-											# bottom: '-10px'
 											color: '#aaa'
 										Dom.text "Closed"
-								#render the chat icon anyway
+
+							#add the chat icon
 								Dom.div !->
 									Dom.style
-										Box: 'middle'
-										margin: "10px"
-									if status is 2 then Dom.style color: '#aaa'
-									require('icon').render(data: '
-											question', color: if status is 2 then '#aaa' else '#666')
-									Dom.last().style 'margin-right': '5px'
-									Dom.text query.get('repliesId')
+										position: 'relative'
+										# Box: 'middle'
+										# marginTop: '5px'
+
+									c = '#888'
+									if status isnt 1 then c = '#aaa'
+									if Event.isNew(query.get('updateTime')) then c = '#5b0'
+
+									require('icon').render(data: chatIcon3, color: c)
+									# Dom.last().style 'margin-right': '5px'
+									Dom.span !->
+										Dom.style
+											position: 'absolute'
+											left: '5px'
+											top: '1px'
+											textAlign: 'center'
+											width: '13px'
+											fontSize: '12px'
+											color: '#fff'
+										Dom.text query.get('repliesId')
+
+							Dom.onTap !-> Page.nav query.key() # argument adds /key() to the url
+
+						#if admin, print status change options.
+						if Plugin.userIsAdmin()
+							Form.vSep()
+							Dom.last().style
+								"align-self": "stretch"
+								"margin": "20px 0px 10px 0px"
+								"min-height": "30px"
+
+							Dom.div !->
+								Dom.style
+									Box: 'vertical bottom right'
+									marginTop: '5px'
+									padding: '10px 10px'
+
+								Dom.div !->
+									Dom.style
+										Box: 'vertical'
+										textAlign: 'right'
+										fontWeight: 'bold'
+										fontSize: '14px'
+										textTransform: 'uppercase'
+										color: "#bbb"
+
+									mode = query.get('status')-1
+									for x,n in [tr("Open"), tr("Closed"), tr("Hidden")]
+										Dom.span !->
+											Dom.text x
+											if mode==n 
+												Dom.style color: Plugin.colors().highlight
+
+								Dom.onTap !->
+									# modeO.set((modeO.peek()+1)%3)
+									newStatus = ((query.peek('status'))%3)+1
+									Server.sync 'status', query.key(), newStatus, !->
+										#this function toggles the already temporarily. The server side does this for real.
+										query.modify 'status', -> newStatus
 				#seperator
 					Dom.div !->
 						Form.sep()

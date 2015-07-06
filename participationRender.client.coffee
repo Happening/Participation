@@ -1,13 +1,15 @@
 Db = require 'db'
 Dom = require 'dom'
-Ui = require 'ui'
-{tr} = require 'i18n'
-Rnd = require 'rand'
-Plugin = require 'plugin'
+Event = require 'event'
 Form = require 'form'
-Page = require 'page'
-Server = require 'server'
 Modal = require 'modal'
+Plugin = require 'plugin'
+Page = require 'page'
+Rnd = require 'rand'
+Server = require 'server'
+Time = require 'time'
+{tr} = require 'i18n'
+Ui = require 'ui'
 
 exports.render = (queryId) ->
 	query = Db.shared.ref 'queries', queryId
@@ -89,7 +91,18 @@ exports.render = (queryId) ->
 					Dom.style
 						Flex: 1
 						padding: '5px 10px'
+					Event.styleNew(reply.get('time'))
 					Dom.text reply.get('text')
+					if Plugin.userIsAdmin()
+						Dom.div !->
+							Dom.style
+								fontSize: '70%'
+								color: '#aaa'
+							Dom.text Plugin.userName( query.get('user') )
+							Dom.text " • "
+							# Dom. text "word"
+							Time.deltaText reply.get('time')
+
 			Form.sep()
 		, (reply) -> if query.get('status') is 2 or Plugin.userIsAdmin() then -reply.get 'votes' else r.randn()
 

@@ -1,20 +1,21 @@
 Db = require 'db'
 Dom = require 'dom'
-Ui = require 'ui'
-{tr} = require 'i18n'
-Rnd = require 'rand'
-Plugin = require 'plugin'
+Event = require 'event'
 Form = require 'form'
-Page = require 'page'
-Server = require 'server'
 Modal = require 'modal'
 Obs = require 'obs'
-Event = require 'event'
+Page = require 'page'
+Plugin = require 'plugin'
+Rnd = require 'rand'
+Server = require 'server'
+{tr} = require 'i18n'
+Ui = require 'ui'
 
 exports.render = ->
 	chatIcon3 = [5,0,-3,"butt",-4,"miter",-5,4,4,2,0.03097373416806601,0.03097373416806601,2,2,0,0.0722720685046361,2,2,0,0,4,2,1.0666666577869877,1.0666666577869877,2,2,-470.71484,-465.13086,7,0,10,2,476.91797,465.13086,16,6,473.48159,465.13086,470.71484,467.89566,470.71484,471.33203,11,2,470.71484,479.99805,16,6,470.71484,483.43442,473.48159,486.20117,476.91797,486.20117,11,2,488.32031,486.20117,11,2,497.57227,491.02344,11,2,497.74414,485.45312,16,6,499.67593,484.40454,500.98242,482.35899,500.98242,479.99805,11,2,500.98242,471.33203,16,6,500.98242,467.89566,498.21567,465.13086,494.7793,465.13086,11,2,476.91797,465.13086,12,0,8,0,6,0]
 
 	Dom.section !->
+		if Event.clearIsNewCache then Event.clearIsNewCache() #workaround for: chearCache called after render, instead of before. Will be fixed in core in the future. Hopefully.
 		if not Db.shared.get 'queries'
 			Dom.h4 "No participations yet."
 		else
@@ -34,14 +35,14 @@ exports.render = ->
 							Dom.style
 								Flex: 1
 								# position: 'relative'
-								Box: 'bottom'
+								Box: 'center'
 								paddingRight: '8px'
 							
 							#The title and subtitle
 							Dom.div !->
 								c = '#888'
 								if status isnt 1 then c = '#aaa'
-								if Event.isNew(query.get('time')) then c = '#5b0'
+								if Event.isNew(query.get('time'), query.key()) then c = '#5b0'
 								Dom.style
 									padding: '20px 8px 10px 8px'
 									Flex: 1
@@ -78,7 +79,7 @@ exports.render = ->
 
 									c = '#888'
 									if status isnt 1 then c = '#aaa'
-									if Event.isNew(query.get('updateTime')) then c = '#5b0'
+									if Event.isNew(query.get('updateTime'), query.key()) then c = '#5b0'
 
 									require('icon').render(data: chatIcon3, color: c)
 									# Dom.last().style 'margin-right': '5px'
@@ -193,5 +194,5 @@ exports.render = ->
 
 						Form.setPageSubmit (d) !->
 							if d.title
-								Server.call 'new', d
+								Server.call 'new', d, !->
 								Page.back()

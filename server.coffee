@@ -11,7 +11,7 @@ exports.client_init = !->
 	Db.personal().remove 'seeds'
 	Db.personal().remove 'up'
 
-exports.client_new = (d) !->	
+exports.client_new = (d, cb) !->	
 	id = Db.shared.incr 'queryId'
 	log "New query added (" + id + ") " + JSON.stringify(d)
 	Db.shared.set 'queries', id,
@@ -23,7 +23,6 @@ exports.client_new = (d) !->
 		user: Plugin.userId() #waarom werkt Plugin serverside ook? magic!
 		time: 0|(new Date()/1000)
 		updateTime: 0
-
 
 exports.client_reply = (parent, reply, user) !->
 	query = Db.shared.ref 'queries', parent

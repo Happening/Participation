@@ -1,3 +1,4 @@
 name: Participation
-description: A prototype of the presenter-audience participation plugin.
+icon: amplifier
+description: Let your audience participate by making statements and let people reply and upvote.
 api: 2

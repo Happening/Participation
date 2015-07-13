@@ -14,9 +14,11 @@ Ui = require 'ui'
 exports.render = (queryId) ->
 	query = Db.shared.ref 'queries', queryId
 	seed = Db.personal.get 'seeds', queryId
+	isMod = Plugin.userIsAdmin() || (Plugin.ownerId() is Plugin.userId())
+
 
 	#if this query happens to be hidden, go back (unless we're admin)
-	if query.get('status') is 3 and !Plugin.userIsAdmin()
+	if query.get('status') is 3 and !isMod 
 		Page.back()
 
 	#make RND with seed if we have it already
@@ -26,7 +28,7 @@ exports.render = (queryId) ->
 
 	Page.setTitle query.get 'title'
 
-	if Plugin.userIsAdmin()
+	if Plugin.userIsAdmin() or Plugin.ownerId() is Plugin.userId()
 		Page.setActions
 			icon: 'trash'
 			label: 'remove photo'
@@ -65,9 +67,9 @@ exports.render = (queryId) ->
 						Dom.div !->
 							Dom.style
 								fontSize: '24px'
-								paddingTop: if !Plugin.userIsAdmin() then '9px' else 'inherit'
+								paddingTop: if !isMod  then '9px' else 'inherit'
 							Dom.text '▲'							
-						if Plugin.userIsAdmin
+						if isMod
 							Dom.div !->
 								Dom.text reply.get('votes')
 					else 
@@ -93,7 +95,7 @@ exports.render = (queryId) ->
 						padding: '5px 10px'
 					Event.styleNew(reply.get('time'))
 					Dom.text reply.get('text')
-					if Plugin.userIsAdmin()
+					if isMod
 						Dom.div !->
 							Dom.style
 								fontSize: '70%'
@@ -104,7 +106,7 @@ exports.render = (queryId) ->
 							Time.deltaText reply.get('time')
 
 			Form.sep()
-		, (reply) -> if query.get('status') is 2 or Plugin.userIsAdmin() then -reply.get 'votes' else r.randn()
+		, (reply) -> if query.get('status') is 2 or isMod then -reply.get 'votes' else r.randn()
 
 		#add Add comment
 		if query.get('status') isnt 2

@@ -1,19 +1,13 @@
 Db = require 'db'
 Plugin = require 'plugin'
 
-exports.onInstall = !->
-	# set the counter to 0 on plugin installation
-	log "Participate server installed called"
-
 exports.client_init = !->
-	log "Participate server init called"
 	Db.shared.remove 'queries'
 	Db.personal().remove 'seeds'
 	Db.personal().remove 'up'
 
 exports.client_new = (d, cb) !->	
 	id = Db.shared.incr 'queryId'
-	log "New query added (" + id + ") " + JSON.stringify(d)
 	Db.shared.set 'queries', id,
 		title: d.title
 		text: d.text

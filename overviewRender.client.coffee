@@ -2,6 +2,7 @@ Db = require 'db'
 Dom = require 'dom'
 Event = require 'event'
 Form = require 'form'
+Icon = require 'icon'
 Modal = require 'modal'
 Obs = require 'obs'
 Page = require 'page'
@@ -43,7 +44,7 @@ exports.render = ->
 							#The title and subtitle
 							Dom.div !->
 								c = '#888'
-								if status isnt 1 then c = '#aaa'
+								if status isnt 1 then c = '#ccc'
 								if Event.isNew(query.get('time'), query.key()) then c = '#5b0'
 								Dom.style
 									padding: '20px 8px 10px 8px'
@@ -51,9 +52,12 @@ exports.render = ->
 									color: c
 
 								Dom.h3 !->
-									Dom.style
-										marginTop: '0px'
-										color: c
+									if not isMod and status is 2
+										Icon.render data:'lock', size: 14, style: marginRight: '5px'
+									else
+										Dom.style
+											marginTop: '0px'
+											color: c
 									Dom.text query.get('title')
 
 								# if status isnt 1 then Dom.last().style 'color': c
@@ -63,24 +67,14 @@ exports.render = ->
 								Dom.style
 									Box: 'vertical right bottom'
 									margin: '10px 0px'
-									# Flex: 1
-
-								# if not admin, print 'closed' if the Participation is.
-								if not isMod and status is 2
-									Dom.span !->
-										Dom.style
-											color: '#aaa'
-										Dom.text "Closed"
 
 							#add the chat icon
 								Dom.div !->
 									Dom.style
 										position: 'relative'
-										# Box: 'middle'
-										# marginTop: '5px'
 
 									c = '#888'
-									if status isnt 1 then c = '#aaa'
+									if isMod and status isnt 1 then c = '#aaa'
 									if Event.isNew(query.get('updateTime'), query.key()) then c = '#5b0'
 
 									require('icon').render(data: chatIcon3, color: c)
@@ -153,46 +147,56 @@ exports.render = ->
 				radio = []
 				Dom.onTap !->
 					Page.nav !->
-						selection = null
-						Dom.css
-							".pressed":
-								backgroundColor: "#f00 !important"
-						Form.input
-							name: 'title'
-							text: 'Title'
-						Form.input
-							name: 'text'
-							text: 'Optional description'
+						Dom.form !->
+							selection = null
+							Dom.css
+								".pressed":
+									backgroundColor: "#f00 !important"
+							# Dom.style
+								# background: '#fff'
+								# padding: '6px'
+								# margin: '-6px -6px 0px -6px'
+							Form.input
+								name: 'title'
+								text: 'Title'
+							Form.input
+								name: 'text'
+								text: 'Optional description'
 
-						Form.hidden "status", 1
-						statusO = Dom.last()
-						Dom.div !->
-							Dom.style
-								Box: 'left middle'
-								padding: '10px'
+							Form.hidden "status", 1
+							statusO = Dom.last()
 
-							Dom.span "Initial status:"
+							Form.sep()
 
-							modeO = Obs.create 0
 							Dom.div !->
 								Dom.style
-									Flex: 1
-									Box: 'vertical'
-									textAlign: 'right'
-									fontWeight: 'bold'
-									fontSize: '14px'
-									textTransform: 'uppercase'
-									color: "#bbb"
-								
-								mode = modeO.get()
-								statusO.value( mode + 1 )
-								for val,n in [tr("Open"), tr("Closed"), tr("Hidden")]
-									Dom.span !->
-										Dom.text val
-										if mode == n 
-											Dom.style color: Plugin.colors().highlight
+									Box: 'left middle'
+									padding: '10px'
+
+								Dom.span tr "Initial status"
+
+								modeO = Obs.create 0
+								Dom.div !->
+									Dom.style
+										Flex: 1
+										Box: 'vertical'
+										textAlign: 'right'
+										fontWeight: 'bold'
+										fontSize: '14px'
+										textTransform: 'uppercase'
+										color: "#bbb"
+									
+									mode = modeO.get()
+									statusO.value( mode + 1 )
+									for val,n in [tr("Open"), tr("Closed"), tr("Hidden")]
+										Dom.span !->
+											Dom.text val
+											if mode == n 
+												Dom.style color: Plugin.colors().highlight
 								Dom.onTap !->
-									modeO.set ((mode+1)%3)
+									modeO.set ((modeO.peek()+1)%3)
+
+							Form.sep()
 
 						Form.setPageSubmit (d) !->
 							if d.title

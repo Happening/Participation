@@ -33,7 +33,7 @@ exports.render = (queryId) ->
 			icon: 'trash'
 			label: 'remove photo'
 			action: !->
-				Modal.confirm null, "Remove participation?", !->
+				Modal.confirm null, tr("Remove participation?"), !->
 					Server.sync 'delete', queryId, !->
 						Db.shared.remove 'queries', queryId
 					Page.back()
@@ -45,7 +45,7 @@ exports.render = (queryId) ->
 			Dom.h1 query.get('title')
 			Dom.text query.get('text')
 			if query.get('status') is 2
-				Dom.h4 "This participation is closed. You can view the results."
+				Dom.h4 tr("This participation is closed. You can view the results.")
 
 		query.iterate 'replies', (reply) !->
 			up = Db.personal.ref('up')
@@ -72,6 +72,9 @@ exports.render = (queryId) ->
 						if isMod
 							Dom.div !->
 								Dom.text reply.get('votes')
+						else
+							if already
+								Dom.text "+1"
 					else 
 						Dom.div !->
 							Dom.style
@@ -100,9 +103,8 @@ exports.render = (queryId) ->
 							Dom.style
 								fontSize: '70%'
 								color: '#aaa'
-							Dom.text Plugin.userName( query.get('user') )
+							Dom.text Plugin.userName( reply.get('user') )
 							Dom.text " • "
-							# Dom. text "word"
 							Time.deltaText reply.get('time')
 
 			Form.sep()
@@ -116,7 +118,7 @@ exports.render = (queryId) ->
 					padding: '15px 8px 10px 18px'
 					color: Plugin.colors().highlight	
 
-				Dom.text tr '+ Add reply'
+				Dom.text tr('+ Add reply')
 				Dom.onTap !->
 					Modal.prompt tr('Your reply'), (d) !->
 						if d then Server.call 'reply', queryId, d, Plugin.userId()
